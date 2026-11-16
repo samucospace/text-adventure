@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,8 +29,10 @@ import { SceneEditorModal } from '../../components/editor/SceneEditorModal';
 import { ValidatorModal } from '../../components/editor/ValidatorModal';
 import { useEditorStore } from '../../store/useEditorStore';
 import { Scene } from '../../types/story';
+import { useTopInset } from '../../utils/useTopInset';
 
 export default function StoryEditorScreen() {
+  const topInset = useTopInset();
   const route = useRoute<RouteProp<RootStackParamList, 'Editor'>>();
   const { storyId } = route.params;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -108,17 +109,21 @@ export default function StoryEditorScreen() {
 
   if (isLoading || !story) {
     return (
-      <SafeAreaView style={styles.loader}>
+      <View style={[styles.loader, { paddingTop: topInset }]}>
         <ActivityIndicator size="large" color="#4F46E5" />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={[styles.container, { paddingTop: topInset }]}>
       {/* Top Bar */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.iconBtn}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <ArrowLeft size={22} color="#0F172A" />
         </TouchableOpacity>
 
@@ -243,10 +248,13 @@ export default function StoryEditorScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setMetaVisible(false)}
       >
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { paddingTop: topInset }]}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Story Settings</Text>
-            <TouchableOpacity onPress={() => setMetaVisible(false)}>
+            <TouchableOpacity
+              onPress={() => setMetaVisible(false)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
               <X size={22} color="#334155" />
             </TouchableOpacity>
           </View>
@@ -277,7 +285,7 @@ export default function StoryEditorScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -294,7 +302,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
-  iconBtn: { padding: 4 },
+  iconBtn: { padding: 8 },
   titleBtn: {
     flex: 1,
     flexDirection: 'row',

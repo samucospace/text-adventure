@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { CornerUpLeft, History, X } from 'lucide-react-native';
 import { HistoryStep } from '../../types/story';
+import { useTopInset } from '../../utils/useTopInset';
 
 interface RewindDrawerProps {
   visible: boolean;
@@ -26,6 +27,7 @@ export function RewindDrawer({
   onRewindToStep,
   onClose,
 }: RewindDrawerProps) {
+  const topInset = useTopInset();
   const handleSelectStep = (stepIndex: number, title: string) => {
     Alert.alert(
       'Rewind Story',
@@ -45,13 +47,17 @@ export function RewindDrawer({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: topInset }]}>
         <View style={styles.header}>
           <View style={styles.titleRow}>
             <History size={20} color="#4F46E5" />
             <Text style={styles.headerTitle}>Rewind Timeline</Text>
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <X size={22} color="#334155" />
           </TouchableOpacity>
         </View>

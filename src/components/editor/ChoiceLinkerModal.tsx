@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Check, Plus, Search, Unlink, X } from 'lucide-react-native';
 import { Scene } from '../../types/story';
+import { useTopInset } from '../../utils/useTopInset';
 
 interface ChoiceLinkerModalProps {
   visible: boolean;
@@ -30,6 +31,7 @@ export function ChoiceLinkerModal({
   onCreateAndLink,
   onClose,
 }: ChoiceLinkerModalProps) {
+  const topInset = useTopInset();
   const [query, setQuery] = useState('');
   const [newTitle, setNewTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -59,10 +61,14 @@ export function ChoiceLinkerModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: topInset }]}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Link Choice Destination</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <X size={22} color="#334155" />
           </TouchableOpacity>
         </View>

@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,8 +28,10 @@ import { SaveSlotsModal } from '../../components/play/SaveSlotsModal';
 import { usePlayStore } from '../../store/usePlayStore';
 import { READER_THEMES, useSettingsStore } from '../../store/useSettingsStore';
 import { Choice } from '../../types/story';
+import { useTopInset } from '../../utils/useTopInset';
 
 export default function PlayStoryScreen() {
+  const topInset = useTopInset();
   const route = useRoute<RouteProp<RootStackParamList, 'Play'>>();
   const { storyId } = route.params;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -94,17 +95,21 @@ export default function PlayStoryScreen() {
 
   if (isLoading || !story) {
     return (
-      <SafeAreaView style={[styles.loader, { backgroundColor: palette.bg }]}>
+      <View style={[styles.loader, { backgroundColor: palette.bg, paddingTop: topInset }]}>
         <ActivityIndicator size="large" color={palette.accent} />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: palette.bg }]} edges={['top']}>
+    <View style={[styles.container, { backgroundColor: palette.bg, paddingTop: topInset }]}>
       {/* Reader Navigation Chrome */}
       <View style={[styles.header, { backgroundColor: palette.surface, borderBottomColor: palette.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.iconBtn}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <ArrowLeft size={22} color={palette.text} />
         </TouchableOpacity>
 
@@ -122,19 +127,32 @@ export default function PlayStoryScreen() {
             onPress={rewindOneStep}
             disabled={historyStack.length === 0}
             style={[styles.iconBtn, historyStack.length === 0 && styles.disabledBtn]}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
             <CornerUpLeft size={20} color={palette.text} />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setRewindVisible(true)} style={styles.iconBtn}>
+          <TouchableOpacity
+            onPress={() => setRewindVisible(true)}
+            style={styles.iconBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+          >
             <History size={20} color={palette.text} />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setSavesVisible(true)} style={styles.iconBtn}>
+          <TouchableOpacity
+            onPress={() => setSavesVisible(true)}
+            style={styles.iconBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+          >
             <Bookmark size={20} color={palette.text} />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setSettingsVisible(true)} style={styles.iconBtn}>
+          <TouchableOpacity
+            onPress={() => setSettingsVisible(true)}
+            style={styles.iconBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+          >
             <Type size={20} color={palette.text} />
           </TouchableOpacity>
         </View>
@@ -291,7 +309,7 @@ export default function PlayStoryScreen() {
         visible={settingsVisible}
         onClose={() => setSettingsVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

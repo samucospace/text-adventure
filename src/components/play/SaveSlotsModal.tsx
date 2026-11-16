@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { BookmarkPlus, Play, Trash2, X } from 'lucide-react-native';
 import { PlaySession } from '../../types/story';
+import { useTopInset } from '../../utils/useTopInset';
 
 interface SaveSlotsModalProps {
   visible: boolean;
@@ -29,6 +30,7 @@ export function SaveSlotsModal({
   onDeleteSlot,
   onClose,
 }: SaveSlotsModalProps) {
+  const topInset = useTopInset();
   const [slotName, setSlotName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -61,10 +63,14 @@ export function SaveSlotsModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: topInset }]}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Save & Load Progress</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <X size={22} color="#334155" />
           </TouchableOpacity>
         </View>

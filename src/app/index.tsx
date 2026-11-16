@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -35,8 +34,10 @@ import { RootStackParamList } from '../navigation/types';
 import { storyRepo } from '../db/storyRepo';
 import { StoryWithCounts } from '../types/story';
 import { parseImportedStoryBundle, serializeStoryToBundle } from '../utils/storySerializer';
+import { useTopInset } from '../utils/useTopInset';
 
 export default function LibraryScreen() {
+  const topInset = useTopInset();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [stories, setStories] = useState<StoryWithCounts[]>([]);
   const [createVisible, setCreateVisible] = useState(false);
@@ -133,7 +134,7 @@ export default function LibraryScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={[styles.container, { paddingTop: topInset }]}>
       <View style={styles.header}>
         <View style={styles.brandRow}>
           <BookOpen size={24} color="#4F46E5" />
@@ -224,10 +225,13 @@ export default function LibraryScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setCreateVisible(false)}
       >
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { paddingTop: topInset }]}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>New Adventure</Text>
-            <TouchableOpacity onPress={() => setCreateVisible(false)}>
+            <TouchableOpacity
+              onPress={() => setCreateVisible(false)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
               <X size={22} color="#334155" />
             </TouchableOpacity>
           </View>
@@ -268,7 +272,7 @@ export default function LibraryScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 

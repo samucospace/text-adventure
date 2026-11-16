@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { AlertTriangle, CheckCircle2, ChevronRight, X } from 'lucide-react-native';
 import { ValidationIssue } from '../../types/story';
+import { useTopInset } from '../../utils/useTopInset';
 
 interface ValidatorModalProps {
   visible: boolean;
@@ -23,12 +24,17 @@ export function ValidatorModal({
   onSelectScene,
   onClose,
 }: ValidatorModalProps) {
+  const topInset = useTopInset();
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: topInset }]}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Story Graph Diagnostics</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <X size={22} color="#334155" />
           </TouchableOpacity>
         </View>

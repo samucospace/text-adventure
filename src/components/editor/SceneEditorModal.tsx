@@ -25,6 +25,7 @@ import {
 } from 'lucide-react-native';
 import { Choice, EndingType, Scene } from '../../types/story';
 import { generateId } from '../../utils/id';
+import { useTopInset } from '../../utils/useTopInset';
 import { ChoiceLinkerModal } from './ChoiceLinkerModal';
 
 const ENDING_TYPES: EndingType[] = ['VICTORY', 'DEATH', 'NEUTRAL', 'CLIFFHANGER'];
@@ -52,6 +53,7 @@ export function SceneEditorModal({
   onDeleteScene,
   onClose,
 }: SceneEditorModalProps) {
+  const topInset = useTopInset();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isEnding, setIsEnding] = useState(false);
@@ -170,11 +172,15 @@ export function SceneEditorModal({
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { paddingTop: topInset }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.iconBtn}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.iconBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <X size={22} color="#334155" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Scene</Text>
