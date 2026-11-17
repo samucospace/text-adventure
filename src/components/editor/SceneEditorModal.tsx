@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { ComponentRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -61,6 +62,72 @@ export function SceneEditorModal({
   const [choices, setChoices] = useState<Choice[]>([]);
   const [linkingChoiceId, setLinkingChoiceId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const scrollOffsetRef = useRef(0);
+  const prevScrollHeightRef = useRef(0);
+  const focusedInputRef = useRef<ComponentRef<typeof TextInput> | null>(null);
+  const titleInputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const contentInputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const choiceInputRefs = useRef<Record<string, ComponentRef<typeof TextInput> | null>>({});
+
+  const scrollToFocusedInput = useCallback(() => {
+    const scrollView = scrollViewRef.current;
+    const input = focusedInputRef.current;
+    if (!scrollView || !input) return;
+
+    scrollView.measureInWindow((_sx, sy, _sw, sh) => {
+      if (sh <= 0) return;
+      input.measureInWindow((_ix, iy, _iw, ih) => {
+        const bottomEdge = sy + sh - 16;
+        const topEdge = sy + 12;
+
+        if (ih > sh - 28) {
+          if (iy > bottomEdge - 40) {
+            scrollView.scrollTo({
+              y: Math.max(0, scrollOffsetRef.current + (iy - topEdge)),
+              animated: true,
+            });
+          }
+          return;
+        }
+
+        if (iy + ih > bottomEdge) {
+          const delta = iy + ih - bottomEdge;
+          scrollView.scrollTo({
+            y: Math.max(0, scrollOffsetRef.current + delta),
+            animated: true,
+          });
+        } else if (iy < topEdge) {
+          const delta = topEdge - iy;
+          scrollView.scrollTo({
+            y: Math.max(0, scrollOffsetRef.current - delta),
+            animated: true,
+          });
+        }
+      });
+    });
+  }, []);
+
+  const handleInputFocus = useCallback(
+    (input: ComponentRef<typeof TextInput> | null) => {
+      focusedInputRef.current = input;
+      if (Keyboard.isVisible()) {
+        requestAnimationFrame(() => scrollToFocusedInput());
+      }
+    },
+    [scrollToFocusedInput]
+  );
+
+  useEffect(() => {
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        focusedInputRef.current = null;
+      }
+    );
+    return () => hideSub.remove();
+  }, []);
 
   useEffect(() => {
     if (scene) {
@@ -173,7 +240,7 @@ export function SceneEditorModal({
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={[styles.container, { paddingTop: topInset }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
       >
         <View style={styles.header}>
           <TouchableOpacity
@@ -194,7 +261,27 @@ export function SceneEditorModal({
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
+          onScroll={(e) => {
+            scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+          }}
+          onLayout={(e) => {
+            const nextHeight = e.nativeEvent.layout.height;
+            if (
+              prevScrollHeightRef.current > 0 &&
+              nextHeight < prevScrollHeightRef.current &&
+              focusedInputRef.current
+            ) {
+              requestAnimationFrame(() => scrollToFocusedInput());
+            }
+            prevScrollHeightRef.current = nextHeight;
+          }}
+        >
           {/* Top metadata bar */}
           <View style={styles.metaRow}>
             <TouchableOpacity
@@ -217,11 +304,13 @@ export function SceneEditorModal({
           {/* Scene Title */}
           <Text style={styles.label}>Scene Title</Text>
           <TextInput
+            ref={titleInputRef}
             style={styles.titleInput}
             placeholder="e.g., The Whispering Gate"
             placeholderTextColor="#94A3B8"
             value={title}
             onChangeText={setTitle}
+            onFocus={() => handleInputFocus(titleInputRef.current)}
           />
 
           {/* Narrative Content */}
@@ -230,6 +319,7 @@ export function SceneEditorModal({
             <Text style={styles.wordCount}>{wordCount} words</Text>
           </View>
           <TextInput
+            ref={contentInputRef}
             style={styles.contentInput}
             placeholder="Write what happens in this scene..."
             placeholderTextColor="#94A3B8"
@@ -237,6 +327,7 @@ export function SceneEditorModal({
             onChangeText={setContent}
             multiline
             textAlignVertical="top"
+            onFocus={() => handleInputFocus(contentInputRef.current)}
           />
 
           {/* Ending Toggle */}
@@ -329,11 +420,15 @@ export function SceneEditorModal({
                       </View>
 
                       <TextInput
+                        ref={(el) => {
+                          choiceInputRefs.current[choice.id] = el;
+                        }}
                         style={styles.choiceInput}
                         placeholder="e.g., Open the iron door"
                         placeholderTextColor="#94A3B8"
                         value={choice.text}
                         onChangeText={(txt) => handleUpdateChoiceText(choice.id, txt)}
+                        onFocus={() => handleInputFocus(choiceInputRefs.current[choice.id] ?? null)}
                       />
 
                       <TouchableOpacity
